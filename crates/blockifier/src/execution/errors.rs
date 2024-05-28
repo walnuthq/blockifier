@@ -1,3 +1,4 @@
+use cairo_felt::Felt252;
 use cairo_vm::types::errors::math_errors::MathError;
 use cairo_vm::vm::errors::cairo_run_errors::CairoRunError;
 use cairo_vm::vm::errors::hint_errors::HintError;
@@ -6,6 +7,7 @@ use cairo_vm::vm::errors::runner_errors::RunnerError;
 use cairo_vm::vm::errors::trace_errors::TraceError;
 use cairo_vm::vm::errors::vm_errors::VirtualMachineError;
 use cairo_vm::vm::errors::vm_exception::VmException;
+use cairo_vm::vm::trace::trace_entry::TraceEntry;
 use num_bigint::{BigInt, TryFromBigIntError};
 use starknet_api::core::{ContractAddress, EntryPointSelector};
 use starknet_api::deprecated_contract_class::EntryPointType;
@@ -96,6 +98,18 @@ pub enum EntryPointExecutionError {
     StateError(#[from] StateError),
     #[error(transparent)]
     TraceError(#[from] TraceError),
+    #[error("Execution failed. Failure reason: {}.", format_panic_data(.error_data))]
+    ExecutionFailedWithTraceAndMemory {
+        error_data: Vec<StarkFelt>,
+        vm_trace: Option<Vec<TraceEntry>>,
+        relocated_memory: Vec<Option<Felt252>>,
+    },
+    #[error("CairoRunError")]
+    CairoRunErrorWithTraceAndMemory {
+        error: CairoRunError,
+        vm_trace: Option<Vec<TraceEntry>>,
+        relocated_memory: Vec<Option<Felt252>>,
+    },
 }
 
 #[derive(Debug, Error)]
